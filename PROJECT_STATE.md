@@ -75,12 +75,18 @@ Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine)
 
 | Environment | Status | Notes |
 |-------------|--------|-------|
-| `development` | Template configured | `.env.development` with placeholders |
-| `staging` | Template configured | `.env.staging` |
-| `production` | Template configured | `.env.production` |
-| Server secrets | Documented only | `.env.server.example` — never in client bundle |
+| `development` | **Ready for cloud link** | Copy `.env.example` → `.env.development`; see `docs/SUPABASE_CLOUD_SETUP.md` |
+| `staging` | Template only | Create separate Supabase project when ready |
+| `production` | Template only | Create separate Supabase project when ready |
 
-**Security gate:** `npm run check-secrets` — PASSED
+**Setup guide:** `docs/SUPABASE_CLOUD_SETUP.md` (Option C — Supabase Cloud)
+
+**Commands after linking:**
+```bash
+npm run check-supabase-env   # verify .env.development
+npx supabase link --project-ref YOUR_REF
+npm run db:push              # apply migrations
+```
 
 ---
 

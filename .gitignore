@@ -30,14 +30,13 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files (templates .env.example is tracked)
+.env
+.env.development
+.env.staging
+.env.production
 .env*.local
 .env.server
-
-# keep template env files tracked; ignore local overrides
-.env.development.local
-.env.staging.local
-.env.production.local
 
 # test coverage
 coverage/
