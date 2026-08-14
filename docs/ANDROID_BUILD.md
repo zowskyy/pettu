@@ -2,6 +2,8 @@
 
 Pet Echo compiles to a **real Android app** via EAS Build — not Expo Go.
 
+**Expo Go is not valid for slice verification.** Native capabilities (Google Sign-In, Play Billing, FCM, camera permissions) only work in an installed EAS dev/preview/production build. The app logs a runtime warning if opened in Expo Go.
+
 ---
 
 ## One-time setup (5 minutes)
@@ -42,10 +44,10 @@ When the build finishes, EAS prints a download URL. Open it on your Android phon
 After installing the dev APK once:
 
 ```bash
-npm run start:dev-client
+npm start
 ```
 
-Open the **Pet Echo** app (not Expo Go) on your phone — it connects to Metro.
+Open the **Pet Echo** dev APK (not Expo Go) on your phone — it connects to Metro.
 
 ---
 

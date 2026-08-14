@@ -1,11 +1,21 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { useAuthBootstrap } from '@/hooks/useAuthBootstrap';
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   useAuthBootstrap();
+
+  useEffect(() => {
+    if (Constants.appOwnership === 'expo') {
+      console.warn(
+        '[Pet Echo] Expo Go is not supported. Install the EAS development build and run `npm start` (dev client).',
+      );
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -46,7 +46,7 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "start:dev-client": "expo start --dev-client",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
