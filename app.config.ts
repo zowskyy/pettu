@@ -79,6 +79,13 @@ const config: ExpoConfig = {
     ],
     withReadExternalStorageMaxSdk,
     'expo-secure-store',
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Allow Pet Echo to access your photos to create your companion.',
+        cameraPermission: 'Allow Pet Echo to take photos of your pet.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
