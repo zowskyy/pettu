@@ -20,7 +20,7 @@ const withReadExternalStorageMaxSdk: ConfigPlugin = (config) =>
         permission.$?.['android:name'] ===
         'android.permission.READ_EXTERNAL_STORAGE'
       ) {
-        permission.$['android:maxSdkVersion'] = '32';
+        (permission.$ as Record<string, string>)['android:maxSdkVersion'] = '32';
       }
     }
 
@@ -77,7 +77,7 @@ const config: ExpoConfig = {
         imageWidth: 76,
       },
     ],
-    withReadExternalStorageMaxSdk,
+    withReadExternalStorageMaxSdk as unknown as string,
     'expo-secure-store',
     [
       'expo-image-picker',

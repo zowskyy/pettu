@@ -1,8 +1,7 @@
 # Pet Echo — Project State
 
 **Last updated:** Slices 11–46 code complete (2026-08-14)  
-**Branch:** `cursor/slices-11-46-91c8`  
-**Repository:** `/workspace`
+**Branch:** `cursor/slices-11-46-91c8`
 
 ---
 
@@ -149,6 +148,8 @@ npm test
 
 ## Migration Status
 
+| Item | Status |
+|------|--------|
 | `00001_initial_schema.sql` | **Applied** to development |
 | `00002_rls_enable.sql` | **Applied** to development |
 | `00003_storage_buckets.sql` | **Applied** to development |

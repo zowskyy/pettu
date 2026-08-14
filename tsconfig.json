@@ -15,5 +15,9 @@
     "lib/**/*.ts",
     "tests/**/*.ts",
     "vitest.config.ts"
+  ],
+  "exclude": [
+    "supabase/functions/**",
+    "node_modules"
   ]
 }

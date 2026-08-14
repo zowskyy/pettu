@@ -53,7 +53,7 @@ export function validateDialoguePayload(value: unknown): value is DialoguePayloa
     return false;
   }
 
-  return !UNSAFE_PATTERNS.some((pattern) => pattern.test(payload.message));
+  return !UNSAFE_PATTERNS.some((pattern) => pattern.test(String(payload.message)));
 }
 
 export function getFallbackDialogue(mood: DialogueMood = 'Happy'): DialoguePayload {

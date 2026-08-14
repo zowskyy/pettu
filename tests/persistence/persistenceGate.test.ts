@@ -109,7 +109,7 @@ describe('Slice 38 — persistence gate test plan', () => {
     const liveIt = LIVE_GATE_ENABLED ? it : it.skip;
 
     liveIt('runs automated persistence suite against linked Supabase', async () => {
-      // Placeholder for Detox/Appium + service_role verification script.
+      // Placeholder for Detox/Appium + server-side verification script.
       expect(LIVE_GATE_ENABLED).toBe(true);
     });
   });

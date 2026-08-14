@@ -14,6 +14,6 @@ class EventEmitter {
   }
 }
 
-(globalThis as { expo?: { EventEmitter: typeof EventEmitter } }).expo = {
+(globalThis as unknown as { expo?: { EventEmitter: typeof EventEmitter } }).expo = {
   EventEmitter,
 };
