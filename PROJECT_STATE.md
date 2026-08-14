@@ -1,16 +1,30 @@
 # Pet Echo — Project State
 
-**Last updated:** Slices 01–10 complete  
-**Branch:** `cursor/slices-01-10-91c8`  
+**Last updated:** Android-native strategy (2026-08-14)  
+**Branch:** `cursor/android-control-docs-3d74`  
 **Repository:** `/workspace`
+
+---
+
+## Platform Strategy: Android-native
+
+| Field | Value |
+|-------|-------|
+| **Launch target** | Android (Google Play) only |
+| **Verification gate** | EAS dev APK required — Expo Go is not valid for native slice sign-off |
+| **Auth (Android v1)** | Google Sign-In primary, email OTP fallback; no Apple on Android |
+| **Deferred** | iOS (App Store), web client — post-Android production launch |
+| **Control doc** | `docs/ANDROID_PLAN.md` |
+
+Compile gate slices **02A–02D** must complete before downstream Android native verification proceeds. Feature slices 01–10 remain complete; Android pipeline work runs in parallel via 02A–02D.
 
 ---
 
 ## Current Phase
 
-**Phase 5 — Companion Domain Engine** (Slices 09–12)
+**Phase 1 — Android compile gate** (Slices 02A–02D)
 
-Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine).
+Slices 01–10 (repo, auth scaffold, schema, engine) complete. Active work: EAS Android configuration and first dev APK.
 
 ---
 
@@ -18,9 +32,16 @@ Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine)
 
 | Field | Value |
 |-------|-------|
-| **Slice ID** | 11 |
-| **Title** | Daily state / offline-safe time engine |
-| **Status** | Not started |
+| **Slice ID** | 02A–02C (in progress) |
+| **Title** | Android compile gate — EAS config, SDK compliance, first dev APK |
+| **Status** | In progress |
+| **02A** | EAS Android project configuration — not started |
+| **02B** | Android manifest & target API 34+ — not started |
+| **02C** | First EAS development APK build — not started |
+| **02D** | APK install & boot gate — blocked on 02C |
+| **Verification gate** | `eas build --profile development --platform android` → installable dev APK |
+
+Next feature slice after compile gate: **11** (Daily state / offline-safe time engine).
 
 ---
 
@@ -45,9 +66,20 @@ Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine)
 
 | Field | Value |
 |-------|-------|
+| **Slice ID** | 02D (after 02A–02C) |
+| **Title** | APK install & boot gate |
+| **Deliverables** | Dev APK installed on API 34+ device/emulator; cold start to auth shell; build ID in this file |
+
+---
+
+## Pending Feature Slice
+
+| Field | Value |
+|-------|-------|
 | **Slice ID** | 11 |
 | **Title** | Daily state / offline-safe time engine |
 | **Deliverables** | Wire `processDailyReset` to backend; 5-day decay verification |
+| **Blocked by** | 02D compile gate for Android-native verification |
 
 ---
 
@@ -122,11 +154,15 @@ npm run db:push              # apply migrations
 
 | Target | Status |
 |--------|--------|
-| EAS development build | Not configured |
-| EAS staging build | Not configured |
-| EAS production build | Not configured |
+| EAS project (Android) | Not configured (02A) |
+| EAS dev APK | Not built (02C) — **verification gate** |
+| EAS preview AAB (Play internal) | Not configured |
+| EAS production AAB | Not configured |
+| FCM / Firebase | Not configured |
+| Google Play Billing | Not configured |
 | Supabase edge functions | Not deployed |
-| App Store / Play Store | Not submitted |
+| Google Play Store | Not submitted |
+| iOS / App Store | Deferred (post-Android launch) |
 
 ---
 
@@ -144,3 +180,4 @@ npm run db:push              # apply migrations
 | 08 | 2026-08-14 | Private storage buckets |
 | 09 | 2026-08-14 | Deterministic companion engine + tests |
 | 10 | 2026-08-14 | Server-side care action RPC with cooldown |
+| — | 2026-08-14 | Android-native platform strategy; control docs updated; compile gate 02A–02D defined |
