@@ -1,0 +1,83 @@
+-- Pet Echo — seed data structure (Slice 07)
+-- This file documents the minimal test data graph for local development.
+-- Uncomment and adapt once auth.users rows exist (e.g. via Supabase Auth signup).
+
+-- ---------------------------------------------------------------------------
+-- Test account A (owner)
+-- ---------------------------------------------------------------------------
+-- auth.users: id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+-- profiles:
+--   id, display_name = 'Test Owner A', timezone = 'America/New_York'
+--
+-- companions (owned by A):
+--   id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
+--   name = 'Mochi', species = 'dog', joy/energy/bond defaults, onboarding_complete = true
+--
+-- companion_photos:
+--   5 training photos in pet-training-photos bucket (3 facial)
+--
+-- memories:
+--   3 timeline entries linked to companion A
+--
+-- care_actions:
+--   recent feed/play history for cooldown testing
+--
+-- inventory_items:
+--   free starter cosmetics (blue bandana, plant-filled room)
+--
+-- subscriptions:
+--   active premium subscription for entitlement checks
+--
+-- entitlements:
+--   canUploadMemory, canGenerateCompanion, canUseFamilyCare = true
+--
+-- notification_preferences:
+--   daily_care_reminder = true, memory_reminder = true, max_per_day = 1
+
+-- ---------------------------------------------------------------------------
+-- Test account B (isolation / negative security tests)
+-- ---------------------------------------------------------------------------
+-- auth.users: id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+-- profiles:
+--   id, display_name = 'Test Owner B', timezone = 'Europe/London'
+--
+-- companions:
+--   separate companion owned only by B (used in Slice 06 cross-account tests)
+
+-- ---------------------------------------------------------------------------
+-- Family Care fixture (optional)
+-- ---------------------------------------------------------------------------
+-- companion_members:
+--   companion_id = A's companion
+--   user_id = caregiver profile id
+--   role = 'caregiver', status = 'accepted'
+--   invited_by = A's profile id
+
+-- ---------------------------------------------------------------------------
+-- Infrastructure fixtures (optional)
+-- ---------------------------------------------------------------------------
+-- generation_jobs:
+--   one succeeded companion_image job linked to A's companion
+--
+-- idempotency_keys:
+--   completed keys for care_action and memory_creation scopes
+--
+-- purchase_events:
+--   processed webhook event with unique provider_event_id
+
+-- Example insert pattern (requires existing auth.users rows):
+--
+-- insert into public.profiles (id, display_name, timezone)
+-- values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Test Owner A', 'America/New_York')
+-- on conflict (id) do nothing;
+--
+-- insert into public.companions (
+--   id, owner_id, name, species, onboarding_complete, last_processed_period
+-- ) values (
+--   'cccccccc-cccc-cccc-cccc-cccccccccccc',
+--   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+--   'Mochi',
+--   'dog',
+--   true,
+--   current_date
+-- ) on conflict (id) do nothing;
