@@ -3,10 +3,18 @@ import { router } from 'expo-router';
 
 export default function OnboardingWelcome() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Pet Echo</Text>
-      <Text style={styles.subtitle}>Create your AI companion from your pet photos.</Text>
-      <Pressable style={styles.button} onPress={() => router.push('/(onboarding)/photos')}>
+    <View style={styles.container} accessibilityLabel="Onboarding welcome screen" accessibilityRole="none">
+      <Text style={styles.title} accessibilityRole="header">
+        Welcome to Pet Echo
+      </Text>
+      <Text style={styles.subtitle} accessibilityLabel="Create your AI companion from your pet photos">
+        Create your AI companion from your pet photos.
+      </Text>
+      <Pressable
+        style={styles.button}
+        onPress={() => router.push('/(onboarding)/pet-type')}
+        accessibilityRole="button"
+        accessibilityLabel="Get started with onboarding">
         <Text style={styles.buttonText}>Get Started</Text>
       </Pressable>
     </View>
