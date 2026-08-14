@@ -29,10 +29,10 @@ Feature implementation slices **11–46** are **merged to `main`** (PR #5). Manu
 
 | Field | Value |
 |-------|-------|
-| **Slice ID** | 02C (first EAS dev APK) |
-| **Title** | First EAS dev APK |
-| **Status** | **Blocked** — requires user `eas login` (or `EXPO_TOKEN` in CI) |
-| **Next action** | **EAS dev APK build** — unblocks 02D, offline QA, device matrix |
+| **Slice ID** | 02D (APK install & boot gate) |
+| **Title** | Install dev APK and smoke-test |
+| **Status** | **Next** — dev APK built (Slice 02C complete) |
+| **Next action** | Install APK on Android device; login → onboarding → home |
 
 ---
 
