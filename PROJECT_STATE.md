@@ -98,7 +98,7 @@ Feature implementation slices **11–46** are **code complete**. Manual verifica
 
 ```bash
 npm test
-# 12 files, 88 passed, 1 skipped (persistence live gate)
+# 12 files, 114 passed, 1 skipped (persistence live gate)
 ```
 
 | Deliverable | Path | Result |
@@ -160,7 +160,7 @@ npm test
 
 | Layer | Status | Notes |
 |-------|--------|-------|
-| Unit tests (engine + security + AI) | **88 passing** | `npm test` |
+| Unit tests (engine + security + AI) | **114 passing, 1 skipped** | `npm test` |
 | Persistence gate (live) | Skipped | `PET_ECHO_PERSISTENCE_LIVE=1` |
 | Integration / RLS live | Not run | Two test accounts |
 | E2E | Not implemented | Planned post-APK |
