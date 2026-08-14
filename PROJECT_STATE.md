@@ -55,8 +55,8 @@ Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine)
 
 | Bug | Severity | Notes |
 |-----|----------|-------|
-| OAuth requires real Supabase project | Low | Placeholder env URLs; auth UI present but not E2E tested against live backend |
-| RLS cross-account test not run live | Medium | Policies written; Slice 06 live A/B test pending Supabase project link |
+| OAuth requires real Supabase project | **Resolved** | Cloud project linked; email OTP login ready |
+| RLS cross-account test not run live | Medium | Policies applied; Slice 06 A/B test pending two test accounts |
 
 ---
 
@@ -75,7 +75,7 @@ Slices 01–10 complete. Next: Slice 11 (Daily state / offline-safe time engine)
 
 | Environment | Status | Notes |
 |-------------|--------|-------|
-| `development` | **Ready for cloud link** | Copy `.env.example` → `.env.development`; see `docs/SUPABASE_CLOUD_SETUP.md` |
+| `development` | **Live** | Project `qtpsjrqvjfhplhcvphev` — schema applied, auth ready |
 | `staging` | Template only | Create separate Supabase project when ready |
 | `production` | Template only | Create separate Supabase project when ready |
 
@@ -94,12 +94,15 @@ npm run db:push              # apply migrations
 
 | Item | Status |
 |------|--------|
-| `00001_initial_schema.sql` | Written |
-| `00002_rls_enable.sql` | Written |
-| `00003_storage_buckets.sql` | Written |
-| `00004_care_actions.sql` | Written |
-| Applied to remote DB | Not yet |
+| `00001_initial_schema.sql` | **Applied** |
+| `00002_rls_enable.sql` | **Applied** |
+| `00003_storage_buckets.sql` | **Applied** |
+| `00004_care_actions.sql` | **Applied** |
+| `00005_rls_policies.sql` | **Applied** |
+| Applied to remote DB | **Yes** (via SQL Editor, verified 2026-08-14) |
 | Rollback tested | Not yet |
+
+**Live verification:** `profiles`, `companions`, `care_actions`, `generation_jobs`, `idempotency_keys` return `[]` (tables exist). `perform_care_action` RPC returns `Not authenticated` (function exists).
 
 ---
 
