@@ -84,7 +84,11 @@ export default function ShopScreen() {
           paw_points_spent: item.pawPointsCost,
         });
       }
-      setCompanion({ ...companion, paw_points: data.paw_points_remaining });
+      const remaining =
+        data && typeof data === 'object' && 'paw_points_remaining' in data
+          ? (data as { paw_points_remaining: number }).paw_points_remaining
+          : companion.paw_points;
+      setCompanion({ ...companion, paw_points: remaining });
       await load();
     } finally {
       setActing(null);

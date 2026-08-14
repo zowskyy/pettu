@@ -18,7 +18,7 @@ import {
   requestNotificationPermission,
   type NotificationPreferences,
 } from '@/services/notificationsService';
-import { fetchPlayProducts, getPlayBillingState, initPlayBilling } from '@/services/payments/playBilling';
+import { fetchPlayProducts, initPlayBilling } from '@/services/payments/playBilling';
 import { deleteAccount, deleteCompanion } from '@/services/deletionService';
 import { trackEvent, resetAnalytics } from '@/services/analytics';
 
