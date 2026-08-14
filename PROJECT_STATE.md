@@ -1,7 +1,7 @@
 # Pet Echo — Project State
 
-**Last updated:** Slices 11–46 code complete (2026-08-14)  
-**Branch:** `cursor/slices-11-46-91c8`
+**Last updated:** Slices 11–46 merged to main; migrations 00001–00010 verified live (2026-08-14)  
+**Branch:** `main` (PR #5 merged)
 
 ---
 
@@ -21,7 +21,7 @@
 
 **Phase 12 — Launch readiness** (Slices 40–46 documentation & hardening complete)
 
-Feature implementation slices **11–46** are **code complete**. Manual verification (EAS APK, live RLS A/B, persistence kill-app, device matrix) remains pending before production ship.
+Feature implementation slices **11–46** are **merged to `main`** (PR #5). Manual verification (EAS dev APK, live RLS A/B, persistence kill-app, device matrix) remains pending before production ship.
 
 ---
 
@@ -29,10 +29,10 @@ Feature implementation slices **11–46** are **code complete**. Manual verifica
 
 | Field | Value |
 |-------|-------|
-| **Slice ID** | 46 (reference graph) |
-| **Title** | Dependency graph |
-| **Status** | **Complete** — `docs/DEPENDENCY_GRAPH.md` |
-| **Next action** | Run Slice 43 production readiness checklist; EAS prod AAB when gates pass |
+| **Slice ID** | 02C (first EAS dev APK) |
+| **Title** | First EAS dev APK |
+| **Status** | **Blocked** — requires user `eas login` (or `EXPO_TOKEN` in CI) |
+| **Next action** | **EAS dev APK build** — unblocks 02D, offline QA, device matrix |
 
 ---
 
@@ -44,7 +44,7 @@ Feature implementation slices **11–46** are **code complete**. Manual verifica
 | 02 | Repository & stack | Complete | Expo SDK 57; `npm test` passes |
 | 02A | EAS Android config | Complete | `app.config.ts`, `com.petecho.app` |
 | 02B | Manifest & SDK | Complete | `expo prebuild --platform android` succeeds |
-| 02C | First EAS dev APK | Code complete | Blocked on `eas login` + `eas init` on dev machine |
+| 02C | First EAS dev APK | Blocked | Requires user `eas login` unless `EXPO_TOKEN` available |
 | 02D | APK install & boot gate | Pending | Blocked on 02C artifact |
 | 03 | Three environments | Complete | `.env.*` templates; `npm run check-secrets` passes |
 | 04 | Navigation shell | Complete | Auth state machine; route guards |
@@ -140,7 +140,7 @@ npm test
 
 | Environment | Status | Notes |
 |-------------|--------|-------|
-| `development` | **Live** | Project `qtpsjrqvjfhplhcvphev` — schema applied |
+| `development` | **Live** | Project `qtpsjrqvjfhplhcvphev` — migrations 00001–00010 verified |
 | `staging` | Template only | Separate Supabase project when ready |
 | `production` | Template only | Required before Play production |
 
@@ -156,14 +156,14 @@ npm test
 | `00004_care_actions.sql` | **Applied** to development |
 | `00005_rls_policies.sql` | **Applied** to development |
 | `00006_daily_decay_rpc.sql` | **Applied** to development |
-| `00007_idempotency_helpers.sql` | Ready to apply |
-| `00008_paw_points.sql` | Ready to apply |
-| `00009_deletion_rpcs.sql` | Ready to apply |
-| `00010_generation_jobs_update_policies.sql` | Ready to apply |
+| `00007_idempotency_helpers.sql` | **Applied** to development |
+| `00008_paw_points.sql` | **Applied** to development |
+| `00009_deletion_rpcs.sql` | **Applied** to development |
+| `00010_generation_jobs_update_policies.sql` | **Applied** to development |
 | Consolidated script | `supabase/APPLY_ALL.sql` (00001–00010) |
 | Rollback tested | Not yet |
 
-**Live verification (00001–00006):** `profiles`, `companions`, `care_actions`, `generation_jobs`, `idempotency_keys` return `[]` (tables exist). `perform_care_action` RPC returns `Not authenticated` (function exists).
+**Live verification (00001–00010):** All migrations verified on Supabase project `qtpsjrqvjfhplhcvphev`. `profiles`, `companions`, `care_actions`, `generation_jobs`, `idempotency_keys` return `[]` (tables exist). `perform_care_action` RPC returns `Not authenticated` (function exists).
 
 ---
 
@@ -184,7 +184,7 @@ npm test
 | Target | Status |
 |--------|--------|
 | EAS project (Android) | Configured (02A–02B) |
-| EAS dev APK | Not built (02C) — **verification gate** |
+| EAS dev APK | Not built (02C) — **next action**; blocked on `eas login` or `EXPO_TOKEN` |
 | EAS production AAB | Not built |
 | Google Play Store | Docs ready (`PLAY_STORE_SUBMISSION.md`); not submitted |
 | iOS / App Store | Deferred |
@@ -196,7 +196,8 @@ npm test
 | Slice | Date | Summary |
 |-------|------|---------|
 | 01–10 | 2026-08-14 | Foundation complete (see prior entries) |
-| 11–33 | 2026-08-14 | Feature slices code complete on branch |
+| 11–46 | 2026-08-14 | Merged to `main` via PR #5 |
+| 11–33 | 2026-08-14 | Feature slices code complete |
 | 34–35 | 2026-08-14 | Security/idempotency mock test suites |
 | 36 | 2026-08-14 | AI failure simulation + `lib/ai/dialogue.ts` |
 | 37 | 2026-08-14 | Offline capabilities documentation |
