@@ -9,15 +9,24 @@ Your URL and anon key are saved in `.env.development` (not committed to git).
 
 ## One thing left: apply the database schema
 
-The app needs tables (`profiles`, `companions`, etc.). I need your **database password** to create them automatically.
+The cloud agent **cannot connect directly** to your database from this environment (network restriction).  
+You have two options — **Option A takes ~30 seconds**:
 
-### Where to find it
+### Option A — SQL Editor (easiest)
 
-1. Open [Supabase Dashboard → Database Settings](https://supabase.com/dashboard/project/qtpsjrqvjfhplhcvphev/settings/database)
-2. Under **Database password**, click **Reveal** (or reset if you forgot it)
-3. Paste the password here in chat — I'll run the migrations and delete it from logs
+1. Open: [SQL Editor → New query](https://supabase.com/dashboard/project/qtpsjrqvjfhplhcvphev/sql/new)
+2. Open `supabase/APPLY_ALL.sql` in this repo
+3. **Select all → Copy → Paste → Run**
 
-> This is the password you chose when creating the project — **not** the anon key you already shared.
+Or run: `bash scripts/open-sql-setup.sh` for these instructions.
+
+### Option B — From your computer (if you have the repo)
+
+```bash
+SUPABASE_DB_PASSWORD='your-password' npm run db:push
+```
+
+> **Security:** You shared your database password in chat. After setup completes, reset it in [Database Settings](https://supabase.com/dashboard/project/qtpsjrqvjfhplhcvphev/settings/database).
 
 ---
 
