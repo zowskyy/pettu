@@ -1,11 +1,16 @@
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import {
   processCompanionGenerationJob,
   queueGenerationJob,
 } from '@/services/generationJobService';
-import type { ArtStyle, CompanionPhotoRef } from '@/types/generation';
+import type {
+  ArtStyle,
+  CompanionGenerationPayload,
+  CompanionPhotoRef,
+} from '@/types/generation';
 
-export interface CreateCompanionInput {
+export interface StartGenerationInput {
   species: string;
   photos: CompanionPhotoRef[];
   personality: string[];
@@ -14,6 +19,11 @@ export interface CreateCompanionInput {
   nickname?: string;
   favoriteThings?: string[];
   quirk?: string;
+}
+
+export interface CreateCompanionInput extends StartGenerationInput {
+  /** When set, starts generation for an existing draft (photos already uploaded). */
+  companionId?: string;
 }
 
 export interface CreateCompanionResult {
@@ -30,6 +40,77 @@ function defaultCompanionName(species: string): string {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
+function buildGenerationPayload(
+  input: StartGenerationInput,
+  name: string,
+): CompanionGenerationPayload {
+  return {
+    species: input.species,
+    name,
+    nickname: input.nickname,
+    personalityTraits: input.personality,
+    favoriteThings: input.favoriteThings,
+    quirk: input.quirk,
+    artStyle: input.artStyle,
+    photoIds: input.photos.map((photo) => photo.id),
+    referenceImageUrls: input.photos.map(
+      (photo) => `${photo.storageBucket ?? 'pet-training-photos'}/${photo.storagePath}`,
+    ),
+  };
+}
+
+export async function fetchCompanionPhotoRefs(
+  companionId: string,
+): Promise<CompanionPhotoRef[]> {
+  const { data, error } = await supabase
+    .from('companion_photos')
+    .select('id, storage_bucket, storage_path, is_facial')
+    .eq('companion_id', companionId)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((photo) => ({
+    id: photo.id,
+    storagePath: photo.storage_path,
+    storageBucket: photo.storage_bucket,
+    isFacial: photo.is_facial,
+  }));
+}
+
+export async function startCompanionGeneration(
+  companionId: string,
+  profileId: string,
+  input: StartGenerationInput,
+): Promise<CreateCompanionResult> {
+  const name = input.name?.trim() || defaultCompanionName(input.species);
+  const payload = buildGenerationPayload(input, name);
+
+  await supabase
+    .from('companions')
+    .update({
+      onboarding_step: 'generating',
+      art_style: input.artStyle,
+    })
+    .eq('id', companionId);
+
+  const job = await queueGenerationJob({
+    companionId,
+    profileId,
+    jobType: 'companion_image',
+    payload,
+  });
+
+  void processCompanionGenerationJob(job.id, payload);
+
+  return {
+    companionId,
+    jobId: job.id,
+  };
+}
+
 export async function createCompanion(
   input: CreateCompanionInput,
 ): Promise<CreateCompanionResult> {
@@ -44,6 +125,10 @@ export async function createCompanion(
 
   if (!user) {
     throw new Error('Must be signed in to create a companion.');
+  }
+
+  if (input.companionId) {
+    return startCompanionGeneration(input.companionId, user.id, input);
   }
 
   const name = input.name?.trim() || defaultCompanionName(input.species);
@@ -88,33 +173,10 @@ export async function createCompanion(
     }
   }
 
-  const payload = {
-    species: input.species,
+  return startCompanionGeneration(companion.id, user.id, {
+    ...input,
     name,
-    nickname: input.nickname,
-    personalityTraits: input.personality,
-    favoriteThings: input.favoriteThings,
-    quirk: input.quirk,
-    artStyle: input.artStyle,
-    photoIds: input.photos.map((photo) => photo.id),
-    referenceImageUrls: input.photos.map(
-      (photo) => `${photo.storageBucket ?? 'pet-training-photos'}/${photo.storagePath}`,
-    ),
-  };
-
-  const job = await queueGenerationJob({
-    companionId: companion.id,
-    profileId: user.id,
-    jobType: 'companion_image',
-    payload,
   });
-
-  void processCompanionGenerationJob(job.id, payload);
-
-  return {
-    companionId: companion.id,
-    jobId: job.id,
-  };
 }
 
 export async function completeOnboarding(companionId: string): Promise<void> {
@@ -129,6 +191,8 @@ export async function completeOnboarding(companionId: string): Promise<void> {
   if (error) {
     throw error;
   }
+
+  useAuthStore.getState().setOnboardingComplete(true);
 }
 
 export async function getCompanionForReveal(companionId: string) {

@@ -115,7 +115,7 @@ export default function OnboardingPhotos() {
       return;
     }
     setError(null);
-    router.push('/(onboarding)/personality');
+    router.push('/(onboarding)/creating');
   }
 
   return (

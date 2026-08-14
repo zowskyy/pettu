@@ -10,6 +10,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   completeOnboarding,
+  fetchCompanionPhotoRefs,
   getCompanionForReveal,
 } from '@/features/companion/createCompanion';
 import {
@@ -18,7 +19,8 @@ import {
   retryGenerationJob,
 } from '@/services/generationJobService';
 import { useAuthStore } from '@/stores/authStore';
-import type { ArtStyle, CompanionGenerationPayload } from '@/types/generation';
+import { useOnboardingStore } from '@/stores/onboardingStore';
+import type { ArtStyle, CompanionGenerationPayload, CompanionPhotoRef } from '@/types/generation';
 
 type RevealPhase = 'loading' | 'generating' | 'ready' | 'failed';
 
@@ -37,6 +39,12 @@ function traitsList(value: CompanionReveal['personality_traits']): string[] {
   if (Array.isArray(value)) {
     return value.filter((item): item is string => typeof item === 'string');
   }
+  if (value && typeof value === 'object' && 'traits' in value) {
+    const traits = (value as { traits?: unknown }).traits;
+    if (Array.isArray(traits)) {
+      return traits.filter((item): item is string => typeof item === 'string');
+    }
+  }
   return [];
 }
 
@@ -52,7 +60,7 @@ export default function OnboardingReveal() {
     companionId?: string;
     jobId?: string;
   }>();
-  const setOnboardingComplete = useAuthStore((state) => state.setOnboardingComplete);
+  const resetOnboarding = useOnboardingStore((state) => state.reset);
   const userId = useAuthStore((state) => state.user?.id);
 
   const companionId = params.companionId ?? '';
@@ -157,13 +165,18 @@ export default function OnboardingReveal() {
 
     try {
       const traits = traitsList(companion.personality_traits);
+      const photoRefs: CompanionPhotoRef[] = await fetchCompanionPhotoRefs(companion.id);
       const payload: CompanionGenerationPayload = {
         species: companion.species,
         name: companion.name,
         nickname: companion.nickname ?? undefined,
         personalityTraits: traits,
         artStyle: companion.art_style,
-        photoIds: [],
+        photoIds: photoRefs.map((photo: CompanionPhotoRef) => photo.id),
+        referenceImageUrls: photoRefs.map(
+          (photo: CompanionPhotoRef) =>
+            `${photo.storageBucket ?? 'pet-training-photos'}/${photo.storagePath}`,
+        ),
       };
 
       const job = await retryGenerationJob(
@@ -195,7 +208,7 @@ export default function OnboardingReveal() {
     setStartingCare(true);
     try {
       await completeOnboarding(companion.id);
-      setOnboardingComplete(true);
+      resetOnboarding();
       router.replace('/(tabs)/home');
     } catch (error) {
       setErrorMessage(

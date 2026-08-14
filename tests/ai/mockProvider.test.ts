@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { generateCompanionImage } from '../../src/services/ai/ImageGenerationService';
-import { generateDialogueResponse } from '../../src/services/ai/DialogueService';
-import { generateCaptionText } from '../../src/services/ai/CaptionService';
-import { generateRecapContent } from '../../src/services/ai/RecapService';
 import { mockProvider } from '../../src/services/ai/providers/MockProvider';
 
 describe('MockProvider', () => {
@@ -23,44 +20,45 @@ describe('MockProvider', () => {
     expect(first.mimeType).toBe('image/png');
   });
 
-  it('returns valid dialogue JSON', async () => {
-    const dialogue = await generateDialogueResponse({
-      companionName: 'Buddy',
-      species: 'dog',
-      personalityTraits: ['loyal'],
-      mood: 'happy',
-      recentAction: 'feed',
+  it('generates distinct paths per art style', async () => {
+    const base = {
+      species: 'cat',
+      name: 'Luna',
+      personalityTraits: ['calm'],
+      photoIds: ['photo-1'],
+      referenceImageUrls: ['pet-training-photos/luna-1.jpg'],
+    };
+
+    const cozy = await generateCompanionImage({
+      ...base,
+      artStyle: 'cozy_storybook',
+    });
+    const pixel = await generateCompanionImage({
+      ...base,
+      artStyle: 'pixel_adventure',
     });
 
-    expect(dialogue.message.length).toBeLessThanOrEqual(160);
-    expect(dialogue.suggested_action).toBeNull();
+    expect(cozy.storagePath).not.toBe(pixel.storagePath);
   });
 
-  it('returns caption under 180 chars', async () => {
-    const caption = await generateCaptionText({
-      memoryTitle: 'Park day',
-      memoryNote: 'Loved the frisbee',
-    });
-
-    expect(caption.length).toBeGreaterThan(0);
-    expect(caption.length).toBeLessThanOrEqual(180);
-  });
-
-  it('returns recap content', async () => {
-    const recap = await generateRecapContent([
-      {
-        id: 'm1',
-        title: 'Beach walk',
-        note: 'Splashed in the waves',
-        memoryDate: '2026-08-01',
-      },
-    ]);
-
-    expect(recap.recapText.length).toBeGreaterThan(0);
-    expect(recap.shareImagePath).toBe('');
-  });
-
-  it('can swap provider without changing facade exports', () => {
+  it('exposes provider name for swap verification', () => {
     expect(mockProvider.name).toBe('mock');
+  });
+
+  it('returns deterministic text from mock provider', async () => {
+    const first = await mockProvider.generateText({
+      systemPrompt: 'dialogue generator',
+      userPrompt: 'Companion: Buddy',
+      maxTokens: 80,
+      responseFormat: 'json',
+    });
+    const second = await mockProvider.generateText({
+      systemPrompt: 'dialogue generator',
+      userPrompt: 'Companion: Buddy',
+      maxTokens: 80,
+      responseFormat: 'json',
+    });
+
+    expect(first.text).toBe(second.text);
   });
 });

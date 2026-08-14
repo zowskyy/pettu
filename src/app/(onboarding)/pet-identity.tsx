@@ -23,7 +23,7 @@ export default function PetIdentityScreen() {
       breed: localBreed,
       colorMarkings: localColor,
     });
-    router.push('/(onboarding)/photos');
+    router.push('/(onboarding)/personality');
   }
 
   return (

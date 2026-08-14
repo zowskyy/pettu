@@ -12,5 +12,19 @@ export default function OnboardingLayout() {
     return <Redirect href="/(tabs)/home" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="welcome" />
+      <Stack.Screen name="pet-type" />
+      <Stack.Screen name="pet-identity" />
+      <Stack.Screen name="personality" />
+      <Stack.Screen name="favorites" />
+      <Stack.Screen name="quirk" />
+      <Stack.Screen name="nickname" />
+      <Stack.Screen name="art-style" />
+      <Stack.Screen name="photos" />
+      <Stack.Screen name="creating" />
+      <Stack.Screen name="reveal" />
+    </Stack>
+  );
 }
