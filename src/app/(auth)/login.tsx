@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, Platform } from 'react-native';
 import {
   sendEmailOtp,
   verifyEmailOtp,
@@ -43,6 +43,9 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pet Echo</Text>
+      <Text style={styles.tagline}>
+        {Platform.OS === 'android' ? 'Sign in to Pet Echo' : 'Sign in to care for your companion'}
+      </Text>
 
       {step === 'email' ? (
         <>
@@ -82,16 +85,19 @@ export default function LoginScreen() {
       <Pressable style={styles.buttonOutline} onPress={() => signInWithOAuth('google')}>
         <Text style={styles.buttonTextDark}>Continue with Google</Text>
       </Pressable>
-      <Pressable style={styles.buttonOutline} onPress={() => signInWithOAuth('apple')}>
-        <Text style={styles.buttonTextDark}>Continue with Apple</Text>
-      </Pressable>
+      {Platform.OS !== 'android' && (
+        <Pressable style={styles.buttonOutline} onPress={() => signInWithOAuth('apple')}>
+          <Text style={styles.buttonTextDark}>Continue with Apple</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 32, fontWeight: '700', marginBottom: 24, textAlign: 'center' },
+  title: { fontSize: 32, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  tagline: { fontSize: 15, color: '#666', marginBottom: 24, textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#666', marginBottom: 12, textAlign: 'center' },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
   button: { backgroundColor: '#208AEF', padding: 14, borderRadius: 8, marginBottom: 12 },
