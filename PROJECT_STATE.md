@@ -44,8 +44,8 @@ Feature implementation slices **11–46** are **merged to `main`** (PR #5). Manu
 | 02 | Repository & stack | Complete | Expo SDK 57; `npm test` passes |
 | 02A | EAS Android config | Complete | `app.config.ts`, `com.petecho.app` |
 | 02B | Manifest & SDK | Complete | `expo prebuild --platform android` succeeds |
-| 02C | First EAS dev APK | Blocked | Requires user `eas login` unless `EXPO_TOKEN` available |
-| 02D | APK install & boot gate | Pending | Blocked on 02C artifact |
+| 02C | First EAS dev APK | Complete | Build `99e24f71` — [APK download](https://expo.dev/artifacts/eas/D7jKtjgj1RPLwT2kvfI81uMAGGFsd5e096NvgcG0Cb4.apk) |
+| 02D | APK install & boot gate | Pending | Install APK on device |
 | 03 | Three environments | Complete | `.env.*` templates; `npm run check-secrets` passes |
 | 04 | Navigation shell | Complete | Auth state machine; route guards |
 | 05 | Authentication | Complete | Email OTP + Google UI; session bootstrap |
