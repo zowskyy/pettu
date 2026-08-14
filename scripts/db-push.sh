@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
-# Push local migrations to linked Supabase cloud project.
+# Push migrations to Supabase cloud using database password (no CLI login required).
 set -euo pipefail
+
+PROJECT_REF="qtpsjrqvjfhplhcvphev"
+PASSWORD="${SUPABASE_DB_PASSWORD:-}"
+
+if [ -z "$PASSWORD" ]; then
+  echo "❌ Missing database password."
+  echo ""
+  echo "Find it in Supabase Dashboard:"
+  echo "  Project Settings → Database → Database password"
+  echo ""
+  echo "Then run:"
+  echo "  SUPABASE_DB_PASSWORD='your-password' npm run db:push"
+  exit 1
+fi
 
 cd "$(dirname "$0")/.."
 
-bash scripts/check-supabase-env.sh .env.development 2>/dev/null || {
-  echo "⚠️  Env not configured — migrations can still push if supabase link is set."
-}
+echo "Pushing migrations to qtpsjrqvjfhplhcvphev..."
+npx supabase db push \
+  --project-ref "$PROJECT_REF" \
+  --password "$PASSWORD" \
+  --yes
 
-echo "Pushing migrations to Supabase cloud..."
-npx supabase db push
-
-echo "✅ Migrations applied. Verify tables in Supabase dashboard → Table Editor."
+echo "✅ Done. Check Table Editor for profiles, companions, etc."

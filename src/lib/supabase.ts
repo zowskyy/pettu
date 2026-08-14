@@ -20,7 +20,7 @@ const ExpoSecureStoreAdapter = {
 function createSupabaseClient(): SupabaseClient {
   if (!isSupabaseConfigured) {
     console.warn(
-      '[Pet Echo] Supabase not configured. Copy .env.example → .env.development and add your cloud keys. See docs/SUPABASE_CLOUD_SETUP.md',
+      '[Pet Echo] Supabase not configured. Copy .env.example → .env.development and add your cloud keys.',
     );
   }
 
@@ -40,14 +40,9 @@ function createSupabaseClient(): SupabaseClient {
 
 export const supabase = createSupabaseClient();
 
-/** OAuth / magic-link redirect for Supabase cloud auth */
 export function getAuthRedirectUrl(): string {
   return Linking.createURL('/');
 }
-
-export type AuthSession = Awaited<
-  ReturnType<typeof supabase.auth.getSession>
->['data']['session'];
 
 export type Profile = {
   id: string;
@@ -68,10 +63,19 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return data;
 }
 
-export async function signInWithEmail(email: string) {
+/** Sends a 6-digit code to email (no redirect URL required). */
+export async function sendEmailOtp(email: string) {
   return supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: getAuthRedirectUrl() },
+    options: { shouldCreateUser: true },
+  });
+}
+
+export async function verifyEmailOtp(email: string, token: string) {
+  return supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
   });
 }
 
