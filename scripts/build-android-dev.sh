@@ -37,4 +37,4 @@ echo "Building development APK on EAS (profile: development)..."
 echo "Logged in as: $(npx eas whoami 2>/dev/null)"
 echo ""
 
-npx eas build --profile development --platform android --non-interactive
+npx eas-cli@latest build --profile development --platform android --non-interactive

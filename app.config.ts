@@ -30,6 +30,7 @@ const withReadExternalStorageMaxSdk: ConfigPlugin = (config) =>
 const config: ExpoConfig = {
   name: 'Pet Echo',
   slug: 'pet-echo',
+  owner: 'zowskyy',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
@@ -93,7 +94,7 @@ const config: ExpoConfig = {
   },
   extra: {
     eas: {
-      projectId: process.env.EAS_PROJECT_ID ?? '',
+      projectId: process.env.EAS_PROJECT_ID ?? 'ce29d06c-dbb6-4d23-aa3f-dc0c48fd6839',
     },
     ...getExpoPublicEnv(),
   },
