@@ -1,7 +1,7 @@
 # Pet Echo — Project State
 
-**Last updated:** Android-native strategy (2026-08-14)  
-**Branch:** `cursor/android-control-docs-3d74`  
+**Last updated:** Slice 02A–02B complete, 02C awaits `eas login` (2026-08-14)  
+**Branch:** `cursor/android-native-91c8`  
 **Repository:** `/workspace`
 
 ---
@@ -32,12 +32,12 @@ Slices 01–10 (repo, auth scaffold, schema, engine) complete. Active work: EAS 
 
 | Field | Value |
 |-------|-------|
-| **Slice ID** | 02A–02C (in progress) |
-| **Title** | Android compile gate — EAS config, SDK compliance, first dev APK |
-| **Status** | In progress |
-| **02A** | EAS Android project configuration — not started |
-| **02B** | Android manifest & target API 34+ — not started |
-| **02C** | First EAS development APK build — not started |
+| **Slice ID** | 02C |
+| **Title** | First EAS development APK build |
+| **Status** | Blocked — requires `npx eas login` on developer machine |
+| **02A** | **Complete** — `app.config.ts`, `com.petecho.app`, permissions, intent filters |
+| **02B** | **Complete** — `eas.json`, `expo prebuild --platform android` succeeds, manifest verified |
+| **02C** | **Pending** — `npm run build:android:dev` after `eas login` + `eas init` |
 | **02D** | APK install & boot gate — blocked on 02C |
 | **Verification gate** | `eas build --profile development --platform android` → installable dev APK |
 
