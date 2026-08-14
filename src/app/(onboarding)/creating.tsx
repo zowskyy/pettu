@@ -5,16 +5,19 @@ import { useAuthStore } from '@/stores/authStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import {
   createCompanionDraft,
-  markOnboardingComplete,
   uploadCompanionPhotos,
 } from '@/services/onboardingService';
+import {
+  createCompanion,
+  fetchCompanionPhotoRefs,
+} from '@/features/companion/createCompanion';
 
-type Stage = 'creating' | 'uploading' | 'finishing' | 'error';
+type Stage = 'creating' | 'uploading' | 'generating' | 'error';
 
 const STAGE_LABELS: Record<Stage, string> = {
   creating: 'Creating your companion…',
   uploading: 'Uploading photos…',
-  finishing: 'Finishing up…',
+  generating: 'Starting generation…',
   error: 'Something went wrong',
 };
 
@@ -47,7 +50,6 @@ export default function CreatingScreen() {
         artStyle,
         companionId,
         setCompanionId,
-        reset,
       } = store;
 
       if (!species || !name || !artStyle || photos.length < 5) {
@@ -82,20 +84,33 @@ export default function CreatingScreen() {
 
         if (cancelled) return;
 
-        setStage('finishing');
-        await markOnboardingComplete(id);
+        setStage('generating');
+        const photoRefs = await fetchCompanionPhotoRefs(id);
+        const { jobId } = await createCompanion({
+          companionId: id,
+          species,
+          photos: photoRefs,
+          personality: personalityTraits,
+          artStyle,
+          name,
+          nickname: nickname || name,
+          favoriteThings,
+          quirk,
+        });
 
         if (cancelled) return;
 
-        reset();
-        router.replace('/(tabs)/home');
+        router.replace({
+          pathname: '/(onboarding)/reveal',
+          params: { companionId: id, jobId },
+        });
       } catch (creationError) {
         if (cancelled) return;
         setStage('error');
         setError(
           creationError instanceof Error
             ? creationError.message
-            : 'Failed to complete onboarding.',
+            : 'Failed to start companion generation.',
         );
       }
     }

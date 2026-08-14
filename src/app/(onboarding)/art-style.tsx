@@ -31,7 +31,7 @@ export default function ArtStyleScreen() {
       title="Art style"
       subtitle="Choose how your companion will look."
       onBack={() => router.back()}
-      onNext={() => router.push('/(onboarding)/creating')}
+      onNext={() => router.push('/(onboarding)/photos')}
       nextDisabled={!artStyle}
       nextLabel="Create Companion">
       <View>
