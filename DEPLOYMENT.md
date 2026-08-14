@@ -1,27 +1,67 @@
 # Pet Echo — Deployment Guide
 
-**Last updated:** Slice 01  
-**Platforms:** iOS (App Store), Android (Google Play)  
-**Build system:** EAS Build (Expo Application Services)  
+**Last updated:** Android-native strategy (2026-08-14)  
+**Platform:** Android (Google Play) — primary and only launch target  
+**Build system:** EAS Build (required for all verification)  
 **Backend:** Supabase (hosted Postgres, Auth, Storage, Edge Functions)
 
 ---
 
-## 1. Environment Overview
+## 1. Platform Strategy
+
+Pet Echo deploys to **Google Play only** for v1. All slice verification that touches native capabilities (auth, billing, push, camera) runs on **EAS-built APKs/AABs** — Expo Go is not a valid verification surface.
+
+### 1.1 Google Play release tracks
+
+| Track | EAS profile | Purpose | Promotion |
+|-------|-------------|---------|-----------|
+| **Internal testing** | `preview` | Team QA, compile-gate sign-off | First staging AAB |
+| **Closed testing** | `preview` | License testers, billing sandbox | After internal checklist green |
+| **Production** | `production` | Public release | After closed checklist + Slice 43 gate |
+
+**Path:** internal → closed → production. No skip.
+
+### 1.2 EAS Build requirement
+
+| Activity | EAS required? |
+|----------|---------------|
+| Compile gate (02A–02D) | Yes — dev APK |
+| Auth / Google Sign-In verification | Yes — dev APK |
+| Google Play Billing verification | Yes — closed-track AAB |
+| FCM push verification | Yes — dev/preview APK on device |
+| TypeScript / unit tests only | No — local `npm test` |
+| Supabase migrations / edge functions | No — Supabase CLI |
+
+Record each verification build ID in `PROJECT_STATE.md`.
+
+### 1.3 Android-specific services
+
+| Service | Purpose | Setup location |
+|---------|---------|----------------|
+| **FCM** | Daily care + memory push | Firebase project; `google-services.json` via EAS secret |
+| **Google Play Billing** | Premium subscription | Play Console products + RTDN → `iap-webhook` |
+| **Target API 34+** | Play policy compliance | `app.json` / Gradle; verified in Slice 02B |
+| **Data safety form** | Play Console disclosure | Photos, email, analytics, AI processing — Slice 44 |
+
+Full Android plan: `docs/ANDROID_PLAN.md`.
+
+---
+
+## 2. Environment Overview
 
 | Environment | Supabase project | EAS profile | Distribution |
 |-------------|------------------|-------------|--------------|
-| **development** | `pet-echo-dev` | `development` | Local simulators, dev client |
-| **staging** | `pet-echo-staging` | `preview` | TestFlight, Google Play internal track |
-| **production** | `pet-echo-prod` | `production` | App Store, Google Play production |
+| **development** | `pet-echo-dev` | `development` | EAS dev APK (direct install) |
+| **staging** | `pet-echo-staging` | `preview` | Google Play internal → closed |
+| **production** | `pet-echo-prod` | `production` | Google Play production |
 
 **Hard rule:** Never develop or run migrations against production. Promote schema dev → staging → prod.
 
 ---
 
-## 2. Environment Variables
+## 3. Environment Variables
 
-### 2.1 Client (Expo — safe to bundle)
+### 3.1 Client (Expo — safe to bundle)
 
 Set per environment in EAS secrets or `.env.{development,staging,production}`:
 
@@ -33,7 +73,7 @@ SENTRY_DSN=https://...@sentry.io/...
 POSTHOG_KEY=phc_...
 ```
 
-### 2.2 Server-only (Supabase Edge Function secrets)
+### 3.2 Server-only (Supabase Edge Function secrets)
 
 Configure via Supabase Dashboard → Project Settings → Edge Functions → Secrets:
 
@@ -43,11 +83,12 @@ AI_PROVIDER_KEY=sk-...
 AI_PROVIDER=openai
 STRIPE_SECRET_KEY=sk_live_...        # production only
 STRIPE_WEBHOOK_SECRET=whsec_...
-APPLE_SHARED_SECRET=...
-GOOGLE_SERVICE_ACCOUNT_JSON={...}
+APPLE_SHARED_SECRET=...               # iOS post-launch only
+GOOGLE_SERVICE_ACCOUNT_JSON={...}     # Play RTDN + eas submit
+FCM_SERVICE_ACCOUNT_JSON={...}        # Push sender (edge function)
 ```
 
-### 2.3 Secret hygiene
+### 3.3 Secret hygiene
 
 - Never prefix server secrets with `EXPO_PUBLIC_`
 - Never commit `.env` files with real secrets
@@ -55,7 +96,7 @@ GOOGLE_SERVICE_ACCOUNT_JSON={...}
 
 ---
 
-## 3. Repository Setup (Slice 02)
+## 4. Repository Setup (Slice 02)
 
 ```bash
 # Scaffold (Slice 02)
@@ -68,17 +109,17 @@ Directory structure per `ARCHITECTURE.md`.
 
 ---
 
-## 4. Supabase Deployment
+## 5. Supabase Deployment
 
-### 4.1 Project provisioning
+### 5.1 Project provisioning
 
 1. Create three Supabase projects (dev, staging, prod) in separate organizations or clearly named.
-2. Enable Auth providers: Apple, Google, Email (magic link).
+2. Enable Auth providers: **Google**, **Email (OTP)**. Apple deferred (iOS post-launch).
 3. Configure redirect URLs for each environment:
    - Dev: `exp://localhost:8081`, custom scheme `petecho://`
    - Staging/Prod: `petecho://auth/callback`
 
-### 4.2 Local development
+### 5.2 Local development
 
 ```bash
 # Install Supabase CLI
@@ -97,7 +138,7 @@ supabase db push
 supabase functions serve --env-file .env.local
 ```
 
-### 4.3 Migrations workflow
+### 5.3 Migrations workflow
 
 ```bash
 # Create migration
@@ -118,7 +159,7 @@ supabase db push
 **Order:** dev (local) → staging → production  
 **Rollback:** Maintain down migrations; test rollback on staging before prod deploy.
 
-### 4.4 Edge functions deployment
+### 5.4 Edge functions deployment
 
 ```bash
 # Deploy single function
@@ -130,7 +171,7 @@ supabase functions deploy --project-ref {ref}
 
 Functions and secrets are per Supabase project — deploy to all three environments.
 
-### 4.5 Storage buckets
+### 5.5 Storage buckets
 
 Create via migration or dashboard (Slice 08):
 
@@ -142,26 +183,29 @@ Create via migration or dashboard (Slice 08):
 | `generated-recaps` | No | Member read |
 | `exports` | No | Owner read |
 
-### 4.6 Auth configuration
+### 5.6 Auth configuration (Android v1)
 
-- Email templates customized for magic link
-- Apple: Services ID, key, bundle ID configured
-- Google: OAuth client IDs for iOS and Android
+- Email OTP templates customized
+- Google: OAuth Android client ID with EAS keystore SHA-1 fingerprint
+- Google Sign-In primary; email OTP fallback — no Apple provider on Android
 - JWT expiry: default Supabase settings; refresh enabled
 
 ---
 
-## 5. EAS Build & Submit
+## 6. EAS Build & Submit (Android)
 
-### 5.1 Initial setup
+### 6.1 Initial setup
 
 ```bash
 npm install -g eas-cli
 eas login
 eas build:configure
+eas credentials --platform android   # keystore + SHA-1 for Google OAuth
 ```
 
-### 5.2 `eas.json` profiles (planned)
+Register the EAS keystore **SHA-1** in Google Cloud Console for the Android OAuth client.
+
+### 6.2 `eas.json` profiles (planned)
 
 ```json
 {
@@ -170,48 +214,56 @@ eas build:configure
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_APP_ENV": "development" }
     },
     "preview": {
       "distribution": "internal",
+      "android": { "buildType": "app-bundle" },
       "env": { "EXPO_PUBLIC_APP_ENV": "staging" }
     },
     "production": {
       "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
       "env": { "EXPO_PUBLIC_APP_ENV": "production" }
     }
   },
   "submit": {
     "production": {
-      "ios": { "appleId": "...", "ascAppId": "...", "appleTeamId": "..." },
-      "android": { "serviceAccountKeyPath": "./google-service-account.json" }
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
+      }
     }
   }
 }
 ```
 
-### 5.3 Build commands
+### 6.3 Build commands
 
 ```bash
-# Development client (simulators + physical devices)
-eas build --profile development --platform ios
+# Compile gate + daily native testing (APK, direct install)
 eas build --profile development --platform android
 
-# Staging (TestFlight / internal track)
-eas build --profile preview --platform all
+# Staging → Play internal track
+eas build --profile preview --platform android
+eas submit --platform android --profile production --track internal
 
-# Production (Slice 44)
-eas build --profile production --platform all
+# Promote closed → production via Play Console or:
+eas submit --platform android --profile production --track production
+
+# Production release (Slice 44)
+eas build --profile production --platform android
+eas submit --platform android --profile production --track production
 ```
 
-### 5.4 Submit to stores
+### 6.4 Android SDK compliance
 
-```bash
-eas submit --platform ios --profile production
-eas submit --platform android --profile production
-```
+- `targetSdkVersion` ≥ **34** (Play policy)
+- `compileSdkVersion` ≥ **34**
+- Verified in compile gate Slice 02B (`npx expo prebuild --platform android`)
 
-### 5.5 OTA updates (optional, post-launch)
+### 6.5 OTA updates (optional, post-launch)
 
 ```bash
 eas update --branch production --message "Bug fix"
@@ -221,7 +273,7 @@ Use only for JS-only changes; native module changes require new EAS build.
 
 ---
 
-## 6. CI/CD Pipeline (planned)
+## 7. CI/CD Pipeline (planned)
 
 ```yaml
 # .github/workflows/deploy-staging.yml
@@ -248,31 +300,31 @@ jobs:
       - run: supabase db push
       - run: supabase functions deploy
 
-  build-staging:
+  build-staging-android:
     needs: deploy-supabase-staging
     runs-on: ubuntu-latest
     steps:
-      - run: eas build --profile preview --platform all --non-interactive
+      - run: eas build --profile preview --platform android --non-interactive
 ```
 
 Production deploys: manual approval gate (Slice 43).
 
 ---
 
-## 7. Webhook Endpoints (production URLs)
+## 8. Webhook Endpoints (production URLs)
 
-Configure in Stripe / Apple / Google dashboards:
+Configure in Google Play (RTDN) and Stripe (if web billing added post-launch):
 
 ```
-https://{prod-ref}.supabase.co/functions/v1/stripe-webhook
 https://{prod-ref}.supabase.co/functions/v1/iap-webhook
+https://{prod-ref}.supabase.co/functions/v1/stripe-webhook
 ```
 
 Staging uses staging project URLs with sandbox/test credentials.
 
 ---
 
-## 8. Monitoring & Alerts
+## 9. Monitoring & Alerts
 
 | Service | Setup | Alerts |
 |---------|-------|--------|
@@ -283,7 +335,7 @@ Staging uses staging project URLs with sandbox/test credentials.
 
 ---
 
-## 9. Production Readiness Gate (Slice 43)
+## 10. Production Readiness Gate (Slice 43)
 
 Before first production deploy, confirm:
 
@@ -292,31 +344,33 @@ Before first production deploy, confirm:
 [ ] Lint passes                [ ] RLS tests pass
 [ ] Unit tests pass            [ ] Storage security verified
 [ ] Integration tests pass     [ ] AI failure tests pass
-[ ] Payment tests pass         [ ] Android build succeeds
-[ ] Webhook replay tests pass  [ ] iOS build succeeds
+[ ] Payment tests pass         [ ] Android AAB build succeeds (production profile)
+[ ] Webhook replay tests pass  [ ] EAS dev APK boot verified (02D)
 [ ] Deletion tests pass        [ ] Production env configured
 [ ] Offline tests completed    [ ] Production secrets configured
 [ ] Privacy policy ready       [ ] Analytics verified
 [ ] Terms ready                [ ] Crash reporting verified
-[ ] Support system ready       [ ] Store assets ready
+[ ] Support system ready       [ ] Play Store assets ready
+[ ] FCM push verified          [ ] Data safety form submitted
+[ ] Target API 34+ confirmed   [ ] Google Play Billing sandbox passed
 ```
 
 ---
 
-## 10. Rollback Procedures
+## 11. Rollback Procedures
 
-### 10.1 Client (mobile)
+### 11.1 Client (Android)
 
 - Cannot rollback installed apps — ship hotfix via EAS build or OTA (JS-only)
 - Keep previous production build artifact in EAS for reference
 
-### 10.2 Database
+### 11.2 Database
 
 - Forward-fix preferred over rollback in production
 - Tested down migrations available for staging
 - Destructive migrations require maintenance window + backup
 
-### 10.3 Edge functions
+### 11.3 Edge functions
 
 ```bash
 # Redeploy previous git tag
@@ -326,48 +380,68 @@ supabase functions deploy --project-ref {prod-ref}
 
 ---
 
-## 11. Store Submission Checklist (Slice 44)
+## 12. Google Play Submission Checklist (Slice 44)
 
-- [ ] App icon (1024×1024)
-- [ ] Splash screen
-- [ ] Screenshots (6.7", 6.1", iPad if supported; phone + tablet Android)
-- [ ] App description, keywords, subtitle
+- [ ] App icon (512×512)
+- [ ] Feature graphic (1024×500)
+- [ ] Phone screenshots (minimum 2)
+- [ ] Short + full description
 - [ ] Privacy policy URL
 - [ ] Terms of service URL
 - [ ] Support URL / email
 - [ ] Account deletion instructions (in-app + store listing)
 - [ ] Subscription disclosures (price, renewal, cancel instructions)
-- [ ] Data use disclosures (photos, AI processing)
-- [ ] Age rating questionnaire
-- [ ] Apple Sign In configured (required if other social logins)
-- [ ] Google Play data safety form
-- [ ] IAP products created in App Store Connect + Play Console
+- [ ] **Data safety form** (photos, email, app activity, device IDs, AI processing)
+- [ ] Content rating questionnaire
+- [ ] **Target API 34+** confirmed in release bundle
+- [ ] Google Play Billing subscription products created
+- [ ] FCM configured; push tested on physical device
+- [ ] Google Sign-In OAuth client with correct SHA-1
 
 ---
 
-## 12. Current Deployment Status
+## 13. Current Deployment Status
 
 | Component | Status |
 |-----------|--------|
-| Supabase projects | Not provisioned (Slice 03) |
-| Migrations | Not created (Slice 07) |
+| Supabase projects | Dev linked; staging/prod templates |
+| Migrations | Applied to dev |
 | Edge functions | Not deployed |
-| EAS project | Not configured (Slice 02) |
-| Store listings | Not created (Slice 44) |
+| EAS project | Not configured (Slice 02A) |
+| EAS dev APK | Not built (Slice 02C) |
+| Play Console listing | Not created (Slice 44) |
+| FCM / Firebase | Not configured |
+| Google Play Billing | Not configured |
 
 See `PROJECT_STATE.md` for live status updates each slice.
 
 ---
 
-## 13. Domain & Branding (optional)
+## 14. Domain & Branding
 
 - App scheme: `petecho://`
-- Bundle ID: `com.petecho.app` (confirm before Slice 02)
-- Deep link domains: `app.petecho.com` (universal links, future)
+- Android package: `com.petecho.app`
+- Deep link callback: `petecho://auth/callback`
 
 ---
 
-## 14. Disaster Recovery
+## 15. Future: iOS (post-Android launch)
+
+Deferred until Google Play production is stable.
+
+| Item | Notes |
+|------|-------|
+| App Store / TestFlight | EAS `preview` / `production` iOS profiles |
+| Sign in with Apple | Required when social logins present on iOS |
+| Apple IAP | App Store Connect products + `APPLE_SHARED_SECRET` |
+| APNs | Push via Apple Push Notification service |
+| Universal links | `app.petecho.com` |
+
+No iOS builds, profiles, or store assets are in scope for v1.
+
+---
+
+## 16. Disaster Recovery
 
 - Supabase: enable daily backups (Pro plan); test restore on staging quarterly
 - Storage: companion images regenerable; user photos are critical — backup bucket replication if budget allows

@@ -2,8 +2,8 @@
 
 **Product:** Pet Echo  
 **Codename:** Pettu  
-**Platform:** iOS & Android (Expo / React Native)  
-**Last updated:** Slice 01
+**Platform:** Android (Google Play) — primary and only launch target  
+**Last updated:** Android-native strategy (2026-08-14)
 
 ---
 
@@ -33,7 +33,7 @@ Pet Echo is not a chatbot, social network, or medical advisor. It is a warm, bou
 ### 3.1 First-time onboarding → companion reveal
 
 ```
-Welcome → Sign in (Apple / Google / Email magic link)
+Welcome → Sign in (Google Sign-In primary; email OTP fallback)
   → Pet type → Pet identity (name, species)
   → Upload 5–10 photos (≥3 clear facial)
   → Personality traits → Favorite things → Quirk → Nickname
@@ -103,7 +103,7 @@ Profile → Subscription management / notification prefs / privacy
 
 | Feature | Description | Authority |
 |---------|-------------|-----------|
-| Auth | Apple, Google, email magic link; session restore | Supabase Auth |
+| Auth | Google Sign-In (primary), email OTP fallback; session restore | Supabase Auth |
 | Companion creation | Photo pipeline + AI image generation (3 art styles) | Edge functions + job queue |
 | Care engine | Feed / Play / Groom / Rest with cooldowns & meters | Deterministic server engine |
 | Mood engine | 7 moods from meter thresholds | Deterministic (no AI) |
@@ -111,14 +111,16 @@ Profile → Subscription management / notification prefs / privacy
 | Memories | Timeline, captions, favorites, monthly recap | Supabase + storage |
 | Paw Points | Daily care + memory rewards, 15/day cap | Server-only |
 | Cosmetics | Bandanas, coats, rooms; equip/unequip | Inventory + entitlements |
-| Subscriptions | Apple/Google IAP + webhooks | Provider webhooks only |
+| Subscriptions | Google Play Billing + webhooks | Provider webhooks only |
 | Family Care | Owner + caregiver roles | RLS + companion_members |
 | Notifications | Daily care + memory reminders, max 1/day | Edge functions + preferences |
 | Deletion | Companion & account cascade with zero orphans | Edge functions + storage purge |
 
 ### Explicitly out of scope (v1)
 
-Voice, AR, social feed, PvP, breeding, NFTs, web client, desktop client, open-ended chat.
+Voice, AR, social feed, PvP, breeding, NFTs, open-ended chat.
+
+**Deferred until post-Android launch:** iOS (App Store), web client, desktop client. Sign in with Apple applies to iOS only and is not in scope for the Android v1 release.
 
 ---
 
@@ -181,4 +183,15 @@ All entitlement grants flow from verified provider webhooks — never from clien
 
 ## 9. Slice Roadmap Reference
 
-This blueprint covers the full 46-slice build defined in `PETTU_BUILD_SPEC.md`. Current execution position is tracked in `PROJECT_STATE.md`.
+This blueprint covers the full 46-slice build defined in `PETTU_BUILD_SPEC.md`, executed **Android-first** per `docs/ANDROID_PLAN.md`. Current execution position is tracked in `PROJECT_STATE.md`.
+
+### Android auth journey (v1)
+
+```
+Welcome screen
+  → [Continue with Google]  (primary)
+  → [Continue with email]   (OTP fallback — no Apple on Android)
+  → Supabase session → profile row → onboarding or Home
+```
+
+Verification for auth and all native Android capabilities requires an **EAS dev APK** — not Expo Go. See compile gate slices 02A–02D in `docs/ANDROID_PLAN.md`.

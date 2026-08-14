@@ -40,6 +40,7 @@ function createSupabaseClient(): SupabaseClient {
 
 export const supabase = createSupabaseClient();
 
+/** OAuth redirect for Supabase. Native Android resolves to `petecho:///` via app.config intent filter. */
 export function getAuthRedirectUrl(): string {
   return Linking.createURL('/');
 }
