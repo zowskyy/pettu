@@ -126,15 +126,20 @@ npm run db:push              # apply migrations
 
 | Item | Status |
 |------|--------|
-| `00001_initial_schema.sql` | **Applied** |
-| `00002_rls_enable.sql` | **Applied** |
-| `00003_storage_buckets.sql` | **Applied** |
-| `00004_care_actions.sql` | **Applied** |
-| `00005_rls_policies.sql` | **Applied** |
-| Applied to remote DB | **Yes** (via SQL Editor, verified 2026-08-14) |
+| `00001_initial_schema.sql` | **Applied** to development |
+| `00002_rls_enable.sql` | **Applied** to development |
+| `00003_storage_buckets.sql` | **Applied** to development |
+| `00004_care_actions.sql` | **Applied** to development |
+| `00005_rls_policies.sql` | **Applied** to development |
+| `00006_daily_decay_rpc.sql` | **Applied** to development |
+| `00007_idempotency_helpers.sql` | Ready to apply |
+| `00008_paw_points.sql` | Ready to apply |
+| `00009_deletion_rpcs.sql` | Ready to apply |
+| `00010_generation_jobs_update_policies.sql` | Ready to apply |
+| Consolidated script | `supabase/APPLY_ALL.sql` (00001–00010) |
 | Rollback tested | Not yet |
 
-**Live verification:** `profiles`, `companions`, `care_actions`, `generation_jobs`, `idempotency_keys` return `[]` (tables exist). `perform_care_action` RPC returns `Not authenticated` (function exists).
+**Live verification (00001–00006):** `profiles`, `companions`, `care_actions`, `generation_jobs`, `idempotency_keys` return `[]` (tables exist). `perform_care_action` RPC returns `Not authenticated` (function exists).
 
 ---
 
